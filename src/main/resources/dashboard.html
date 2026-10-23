@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payroll Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      background: #f5f7fb;
+      color: #1f2937;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 0.7rem;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <h1>Payroll & Tax Dashboard</h1>
+
+  <div class="card">
+    <h2>Summary</h2>
+    <div id="summary" class="stats"></div>
+  </div>
+
+  <div class="card">
+    <h2>Recent Records</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>Gross</th>
+          <th>Tax</th>
+          <th>Net</th>
+        </tr>
+      </thead>
+      <tbody id="records"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const data = {
+      summary: {
+        total_records: 0,
+        total_gross: 0,
+        total_tax: 0,
+        average_net: 0,
+        largest_employee: "-"
+      },
+      records: []
+    };
+
+    const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[character]));
+
+    const render = () => {
+      const summaryRoot = document.getElementById('summary');
+      summaryRoot.innerHTML = `
+        <div class="card"><strong>Total Records</strong><div>${data.summary.total_records}</div></div>
+        <div class="card"><strong>Total Gross</strong><div>${data.summary.total_gross.toFixed(2)}</div></div>
+        <div class="card"><strong>Total Tax</strong><div>${data.summary.total_tax.toFixed(2)}</div></div>
+        <div class="card"><strong>Average Net</strong><div>${data.summary.average_net.toFixed(2)}</div></div>
+        <div class="card"><strong>Largest Employee</strong><div>${escapeHtml(data.summary.largest_employee || '-')}</div></div>
+      `;
+
+      const rows = data.records.map(record => `
+        <tr>
+          <td>${escapeHtml(record.employee_name)}</td>
+          <td>${record.gross_pay.toFixed(2)}</td>
+          <td>${record.tax_amount.toFixed(2)}</td>
+          <td>${record.net_pay.toFixed(2)}</td>
+        </tr>
+      `).join('');
+      document.getElementById('records').innerHTML = rows;
+    };
+
+    fetch('/api/payroll')
+      .then(response => response.json())
+      .then(payload => {
+        data.summary = payload.summary;
+        data.records = payload.records;
+        render();
+      })
+      .catch(() => {
+        render();
+      });
+  </script>
+</body>
+</html>
