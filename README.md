@@ -1,160 +1,186 @@
-# Payroll & Tax Calculator with Persistence & Analytics
+# Payroll & Tax Calculator + Persistence & Analytics
 
-A professional, portfolio-grade HRMS payroll management system built in
-**Java 17**, **Swing + FlatLaf**, and **MySQL/JDBC**, following a clean
-**MVC + DAO + Service-layer** architecture.
+Java 17+ payroll application with SQLite storage, analytics, a CLI, and a browser dashboard.
 
-![Java](https://img.shields.io/badge/Java-17-orange) ![Maven](https://img.shields.io/badge/Build-Maven-blue) ![MySQL](https://img.shields.io/badge/DB-MySQL-4479A1)
+## Build and test on Windows
 
----
+Install JDK 17 or newer, then run from this project folder:
 
-## 1. What's implemented (fully working)
-
-- **Authentication** — login screen, show/hide password, remember-me, validation, logout, BCrypt-hashed passwords.
-- **Dashboard** — 6 live KPI cards (employees, monthly payroll, tax collected, avg/max/min salary) + recent activity feed.
-- **Employee Management** — add / edit / (soft) delete / search / filter by department / filter by salary range / view details, with full field validation and a salary-change audit trail (`salary_history` table).
-- **Payroll Calculator** — Gross = Basic + Bonus + Allowances; PF deduction; progressive slab-based income tax; Net salary. Supports single-employee calculation and a bulk "Run Payroll for All" action, persisted to the `payroll` table.
-- **Tax Calculator** — fully editable progressive tax slabs (add/edit/remove brackets), applied live to every subsequent payroll run.
-- **Salary Slip** — professional printable PDF payslip (OpenPDF) with company header, employee details, and full earnings/deductions breakdown.
-- **Analytics** — department-wise payroll (bar), employee distribution (pie), salary distribution (pie), monthly payroll trend (line) — all via JFreeChart on live data.
-- **Reports** — Employee / Payroll / Tax / Department reports, exportable to **PDF**, **Excel (.xlsx)**, and **CSV**.
-- **Database** — full MySQL schema (employees, payroll, salary_history, users, departments, tax_slabs, activity_log) with prepared statements everywhere, a HikariCP connection pool, and a DAO layer behind a generic `CrudDAO<T, ID>` interface.
-- **UI/UX** — sidebar navigation, gradient login hero, rounded KPI cards, striped tables, hover effects, FlatLaf theming, Light/Dark mode toggle.
-- **Extras** — database backup/restore (portable SQL dump, no external `mysqldump` dependency), recent activity log, profile page, about page, keyboard-shortcut reference.
-- **OOP demonstrated throughout** — encapsulation (model getters/setters), interfaces + polymorphism (`TaxCalculationStrategy` / `SlabBasedTaxCalculator`), abstraction (`CrudDAO<T,ID>`), custom exceptions (`ValidationException`, `AuthenticationException`, `DataAccessException`), collections, records, and a clean package structure.
-
-## 2. What's intentionally lighter-weight
-
-This is a large brief (the kind of thing real HRMS products spend months on). To keep every included feature genuinely functional rather than stubbed, a few items are simplified:
-
-- **Backup/Restore** works by dumping/replaying SQL `INSERT` statements over JDBC (fully self-contained, no `mysqldump` binary required) rather than a full binary MySQL dump.
-- **Tax slabs** are edited as a full-table replace-on-save (simple and safe) rather than granular per-row PATCH.
-- **ER / Class / Use-case diagrams** are not included as image files — the schema (`database/schema.sql`) and package layout below serve as the equivalent reference; you're welcome to generate diagrams from them with a tool like dbdiagram.io or PlantUML.
-- **Payroll generated_by** tracking is wired in the activity log but not yet threaded onto the `payroll.generated_by` column value itself.
-
-## 3. Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Language | Java 17 |
-| Build | Maven |
-| UI | Java Swing + FlatLaf (modern flat theme) |
-| Database | MySQL 8 via JDBC (`mysql-connector-j`) |
-| Connection Pool | HikariCP |
-| Charts | JFreeChart |
-| PDF | OpenPDF |
-| Excel | Apache POI |
-| Password Hashing | jBCrypt |
-
-## 4. Project Structure
-
-```
-payroll-tax-calculator/
-├── pom.xml
-├── database/
-│   └── schema.sql              # full DDL + seed data
-├── src/main/java/com/hrms/payroll/
-│   ├── Main.java                # entry point
-│   ├── model/                   # Employee, Department, User, TaxSlab, Payroll, SalaryHistory
-│   ├── dao/                     # CrudDAO<T,ID> + per-entity interfaces
-│   │   └── impl/                # JDBC implementations (PreparedStatement everywhere)
-│   ├── database/                # DatabaseConnection (HikariCP pool, singleton)
-│   ├── service/                 # business logic: EmployeeService, PayrollService,
-│   │                             #   AuthService, AnalyticsService, TaxCalculationStrategy,
-│   │                             #   SlabBasedTaxCalculator, AppContext (DI), AppBootstrap
-│   ├── controller/               # thin MVC adapters between UI and services
-│   ├── ui/                       # LoginFrame, MainDashboardFrame, feature panels
-│   │   └── components/           # RoundedPanel, StatCard, GradientPanel, PrimaryButton
-│   ├── reports/                  # SalarySlipGenerator (PDF), ReportGenerator, exporters
-│   └── utils/                    # ValidationUtils, PasswordHasher, CurrencyFormatter, UITheme
-└── src/main/resources/
-    ├── db.properties             # DB connection settings — edit this first
-    └── logback.xml
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
 ```
 
-## 5. Setup & Installation
+The script downloads SQLite JDBC from Maven Central to `lib/`, compiles
+Java sources, packages `build/payroll.jar`, and runs calculation, validation,
+persistence, analytics, and HTTP integration tests. Internet access is required
+for the first build. Dependencies are cached for subsequent builds.
 
-### Prerequisites
-- JDK 17+
-- Maven 3.8+
-- MySQL 8.x running locally (or reachable)
+## Run
 
-### Steps
+```powershell
+java -cp "build/payroll.jar;lib/*" payroll.Main --help
+java -cp "build/payroll.jar;lib/*" payroll.Main --employee Alice --salary 5000 --bonus 250 --tax-rate 0.2
+java -cp "build/payroll.jar;lib/*" payroll.Main --list
+java -cp "build/payroll.jar;lib/*" payroll.Main --summary
+java -cp "build/payroll.jar;lib/*" payroll.Main --tax-only 5250 --tax-rate 0.2
+java -cp "build/payroll.jar;lib/*" payroll.Main --dashboard
+```
 
-1. **Create the database:**
-   ```bash
-   mysql -u root -p < database/schema.sql
-   ```
-   This creates the `payroll_hrms` database, all tables, and seed data (5 sample employees, 5 departments, 4 tax slabs).
+Open http://127.0.0.1:8000 for the dashboard. Stop with Ctrl+C.
+Use `--port 9000` to change the port and `--db path/to/file.db` to choose a database.
+The database parent directory must exist. On macOS/Linux, use a colon instead
+of a semicolon in the classpath.
 
-2. **Configure the connection:**
-   Edit `src/main/resources/db.properties`:
-   ```properties
-   db.host=localhost
-   db.port=3306
-   db.name=payroll_hrms
-   db.user=root
-   db.password=your_mysql_password
-   ```
+The Alice example produces gross pay 5250, tax 1050, and net pay 4200.
+Tax rates are fractions between 0 and 1. Salary and bonus must be finite and
+non-negative. Calculations use double precision; analytics round to two decimal
+places. Tax is a configurable flat rate.
 
-3. **Run it:**
-   ```bash
-   mvn clean compile exec:java
-   ```
-   or build a runnable fat JAR:
-   ```bash
-   mvn clean package
-   java -jar target/payroll-tax-calculator.jar
-   ```
+## Maven alternative
 
-4. **Log in** with the default admin account (auto-created on first run):
-   - Username: `admin`
-   - Password: `Admin@123`
+```sh
+mvn verify
+mvn exec:java -Dexec.args="--employee Alice --salary 5000 --bonus 250"
+mvn exec:java -Dexec.args="--dashboard"
+```
 
-## 6. Tax Slab Logic
+## Existing data
 
-Tax is computed **progressively** — each portion of income is taxed at the
-rate for the bracket it falls into (not the whole income at the top
-marginal rate). Default seed slabs (annual income):
+The Java application uses the original `payroll_records` SQLite schema. Run from
+this directory to continue using the existing `payroll.db`, or pass its path
+with `--db`. Databases are excluded from Git because they can hold employee data.
+Tests use a separate temporary database and do not modify your payroll records.
 
-| Slab | Range | Rate |
-|---|---|---|
-| 1 | ₹0 – ₹250,000 | 0% |
-| 2 | ₹250,001 – ₹500,000 | 5% |
-| 3 | ₹500,001 – ₹1,000,000 | 20% |
-| 4 | Above ₹1,000,000 | 30% |
+## Interactive dashboard
 
-Editable live from **Tax Calculator** in the app — changes apply to every
-payroll run from that point forward.
+The web frontend lives in `src/main/resources/` and uses HTML, CSS, and vanilla
+JavaScript, served by `payroll.DashboardServer`. The Swing/MySQL application on
+the repository's `main` branch is separate and has not been changed by this UI
+redesign. This web application uses the existing Java/SQLite HTTP API.
 
-## 7. Database Schema (summary)
+The interface includes a navy sidebar, responsive drawer navigation, a month
+selector, light/dark/system appearance settings, four filtered summary cards,
+and a live take-home/tax stacked bar. The month selector filters by record
+creation month, because the current schema has no separate payroll period.
+No currency code is configured; the UI preserves the existing unitless amounts
+and flat-rate tax rules instead of introducing an illustrative dollar currency.
 
-- `employees` — personal + compensation fields, soft-deleted via `is_active`
-- `departments` — department master list
-- `users` — HR admin logins (BCrypt-hashed passwords, roles: ADMIN / HR_MANAGER / VIEWER)
-- `tax_slabs` — editable progressive tax brackets
-- `payroll` — one row per employee per pay period (`YYYY-MM`), unique per (employee, period)
-- `salary_history` — audit trail of basic-salary/bonus changes
-- `activity_log` — feeds the dashboard's Recent Activity list
+To build and run this version alongside an older running jar:
 
-Full DDL with comments: [`database/schema.sql`](database/schema.sql).
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1 -JarPath build/payroll-studio.jar
+java --enable-native-access=ALL-UNNAMED -cp "build/payroll-studio.jar;lib/*" payroll.Main --dashboard --port 8001
+```
 
-## 8. Extending This Project
+Open <http://127.0.0.1:8001/>. Stop any existing server on that port before starting
+another. Java serves both the frontend and backend, so there is no separate npm
+development server. The PowerShell build runs frontend checks when Node is
+installed. Browser layout, print-dialog, and device testing still require a
+browser; Node checks exercise frontend logic using a small DOM test double.
 
-- Swap `SlabBasedTaxCalculator` for a different `TaxCalculationStrategy` implementation (e.g. flat-rate, region-specific) without touching `PayrollService` — that's the point of the interface.
-- Add new report types by extending `ReportGenerator` with new header/row builder pairs; the PDF/Excel/CSV export plumbing is already generic.
-- Add new dashboard KPIs by extending `AnalyticsService.DashboardSnapshot` and `StatCard` usage in `DashboardPanel`.
-- Role-based UI restrictions: `User.Role` already exists (ADMIN/HR_MANAGER/VIEWER) — wire conditional rendering in `MainDashboardFrame` based on `currentUser.getRole()`.
+Data access is isolated in `payroll-api.js`. There is no local-storage fallback
+or demo record mode: successful writes must receive a response from the backend.
+Only the appearance preference uses local storage; authentication uses an
+HttpOnly session cookie. Records and passwords are not saved in browser storage.
+The existing SQLite
+backend needs no further endpoints for these controls. Connecting this UI to
+the separate desktop MySQL database would require an HTTP adapter for that
+application; it is not currently connected to that database.
 
-## 9. Future Enhancements (not yet built)
+- Create payroll with a live gross, tax, and net preview. The form accepts tax as
+  a percentage (20 means 20%); the backend accepts the fractional rate (0.2).
+- Search employees, sort monthly salary, and filter by creation date (inclusive).
+  Summary cards and charts reflect the filtered records.
+- Edit records in a modal or permanently delete them after confirmation.
+- Switch charts between individual payroll records and monthly totals. Toggle
+  gross/net series and hover or focus bars to inspect values.
+- Toggle light/dark mode; the preference is saved in the browser.
+- Export the filtered records as CSV, or open a record's Slip action and print
+  it or save it as PDF using the browser's print dialog.
 
-- Multi-currency support
-- Employee self-service portal (separate login role)
-- Email delivery of salary slips
-- Leave & attendance management integration
-- REST API layer for a future web/mobile client
-- Full binary `mysqldump`-based backup as an alternative to the SQL-insert dump
+The dashboard is a local application served on the loopback interface. On first
+visit, create your workspace account with a username and a password of at least
+8 characters. There is no default password. The account is stored in the same
+SQLite database using a salted PBKDF2 password hash. The avatar and sidebar
+account button open the account menu and Sign out action.
 
----
+All payroll HTTP endpoints require a signed-in session. Sessions use an HttpOnly,
+SameSite=Strict cookie and expire after 8 hours or a server restart. Signing out
+revokes that session. Login is for one local workspace account, not a multi-user
+role/permission system; the separate Swing/MySQL login remains unchanged.
+Command-line operations continue to use direct database access as before.
 
-*Built as a demonstration of clean Java architecture: MVC, DAO pattern, interface-driven design, exception handling, and a real persistence layer — not a toy CRUD demo.*
+State-changing requests also require the session's `X-CSRF-Token` header. The
+frontend manages this automatically, including setup, login, and logout. Custom
+HTTP clients must first call `/api/auth/session` with cookie persistence, read
+`csrfToken`, and send it on mutations. Login rotates the token; use the value in
+the login response afterward. See [SECURITY.md](SECURITY.md) for boundaries,
+diagnostic policies, and local deployment limitations.
+
+Refresh fetches current database records without clearing filters and displays
+a completion message and update time. API calls time out after 12 seconds with
+an actionable error instead of leaving controls loading forever.
+
+### HTTP API
+
+- `GET /api/auth/session`: current session and first-run setup status
+- `POST /api/auth/setup`: create the first workspace account
+- `POST /api/auth/login`: sign in
+- `POST /api/auth/logout`: revoke the current session
+
+Setup/login accept form-encoded `username` and `password` fields. The following
+payroll endpoints require the session cookie:
+
+- `GET /api/payroll`: summary and records
+- `POST /api/payroll`: create
+- `PUT /api/payroll/{id}`: update
+- `DELETE /api/payroll/{id}`: permanently delete
+
+POST and PUT accept `application/x-www-form-urlencoded` fields:
+`employee_name`, `monthly_salary`, `bonus`, and `tax_rate` (fraction 0–1).
+Gross, tax, and net are always recalculated on the server.
+
+## Source files
+
+- `src/main/java/payroll/`: calculations, repository, CLI, and HTTP server
+- `src/main/resources/dashboard.html`: browser dashboard bundled in the jar
+- `src/main/resources/dashboard.css`: theme tokens, layout, reusable UI styles,
+  responsive navigation, and print rules
+- `src/main/resources/dashboard.js`: rendering, shared form components, filters,
+  navigation, appearance settings, and actions
+- `src/main/resources/payroll-api.js`: HTTP requests and form-encoded writes
+- `src/test/java/payroll/PayrollTest.java`: automated regression checks
+- `pom.xml`: Maven build
+- `build.ps1`: build and test without Maven
+
+Frontend logic checks (Node.js, no packages required):
+
+```sh
+node src/test/js/dashboard.test.cjs
+node src/test/js/page-integration.test.cjs
+```
+
+The page integration suite reads the actual page markup and invokes its event
+handlers through a strict DOM test double against a real Java server. Unknown
+element IDs fail the test. It covers account setup/login/logout, Refresh,
+create/edit/delete, deletion cancellation, exports, print initiation, settings,
+navigation, and theme controls. It uses a disposable temporary database and
+never creates an account or changes records in your real `payroll.db`.
+
+Python sources and packaging have been replaced. Old local virtual environments
+and caches are unused and excluded from Git.
+
+## Offline checks
+
+If the SQLite driver cannot be downloaded, calculations and JSON serialization
+can still be compiled and checked without dependencies:
+
+```powershell
+New-Item -ItemType Directory -Force build/classes, build/test-classes | Out-Null
+javac --release 17 -d build/classes src/main/java/payroll/*.java
+javac --release 17 -cp build/classes -d build/test-classes src/test/java/payroll/*.java
+java -cp "build/test-classes;build/classes" payroll.PayrollTest --core-only
+```
+
+This mode does not run SQLite or HTTP integration tests. Use `build.ps1` or
+`mvn verify` with the driver available to run the full suite.
