@@ -1,109 +1,39 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Payroll Dashboard</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 2rem;
-      background: #f5f7fb;
-      color: #1f2937;
-    }
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 1rem 1.25rem;
-      margin-bottom: 1rem;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-    }
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 1rem;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      padding: 0.7rem;
-      border-bottom: 1px solid #e5e7eb;
-      text-align: left;
-    }
-  </style>
-</head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><title>Payroll Studio · Overview</title><link rel="stylesheet" href="/dashboard.css"><script src="/payroll-api.js" defer></script><script src="/dashboard.js" defer></script></head>
 <body>
-  <h1>Payroll & Tax Dashboard</h1>
+<section class="auth-screen" id="auth-screen" aria-labelledby="auth-title">
+<div class="auth-card"><div class="auth-logo">P</div><p class="eyebrow">PAYROLL STUDIO</p><h1 id="auth-title">Welcome back</h1><p id="auth-description" class="muted">Sign in to your payroll workspace.</p>
+<div id="auth-message" role="alert" class="auth-message" hidden></div>
+<form id="auth-form"><label for="auth-username">Username</label><input id="auth-username" name="username" autocomplete="username" required minlength="3" maxlength="64" pattern="[A-Za-z0-9_.-]{3,64}"><label for="auth-password">Password</label><div class="password-field"><input id="auth-password" name="password" type="password" autocomplete="current-password" required maxlength="256"><button id="password-toggle" type="button" aria-label="Show password" aria-pressed="false">Show</button></div><p id="password-help" class="muted"></p><button id="auth-submit" class="primary full" type="submit">Sign in</button></form><button id="auth-retry" class="text-button" type="button" hidden>Retry connection</button><p class="auth-footnote">Your account and payroll records are stored in this local workspace.</p></div></section>
+<div id="workspace-content" hidden>
+<a class="skip-link" href="#overview">Skip to dashboard</a>
+<button class="sidebar-backdrop" id="sidebar-backdrop" aria-label="Close navigation" hidden></button>
+<aside class="sidebar" id="sidebar" aria-label="Workspace navigation">
+  <a class="brand" href="#overview" aria-label="Payroll Studio home"><span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 7h8M8 11h3M8 15h3M15 11v6m-2-2h4"/></svg></span><span>Payroll <b>Studio</b><small>PAYROLL & TAX MANAGEMENT</small></span></a>
+  <div class="workspace"><span class="workspace-avatar">P</span><span><strong>My workspace</strong><small>Payroll management</small></span></div>
+  <p class="nav-heading">WORKSPACE</p>
+  <nav class="sidebar-nav" aria-label="Main navigation"><a class="nav-link active" href="#overview" aria-current="location"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Overview</span></a><a class="nav-link " href="#records-section" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3h6v3H9zM9 11h6M9 15h6"/></svg><span>Payroll Records</span></a><a class="nav-link " href="#insights" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v16h17M8 15v-4m5 4V7m5 8v-6"/></svg><span>Analytics</span></a><button class="nav-link" id="settings-open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 3-1 3-3 1 1 3-2 2 2 2-1 3 3 1 1 3h6l1-3 3-1-1-3 2-2-2-2 1-3-3-1-1-3z"/><circle cx="12" cy="12" r="3"/></svg><span>Settings</span></button></nav>
+  <div class="sidebar-bottom"><div class="sidebar-note"><span class="note-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 8V5a2 2 0 0 0-2-2H5a3 3 0 0 0 0 6h15v11H5a3 3 0 0 1-3-3V6M20 12h-5v4h5"/></svg></span><strong>Every detail, accounted for.</strong><p>A simpler way to keep payroll organized.</p></div><button id="sidebar-account" class="workspace-user"><span class="user-avatar">PS</span><span><strong id="sidebar-username">Payroll workspace</strong><small>Account &amp; sign out</small></span></button></div>
+</aside>
+<div class="app-shell">
+<header class="app-header"><div class="header-title"><button id="menu-toggle" class="icon-button mobile-menu" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><div><span class="eyebrow">WORKSPACE / OVERVIEW</span><h1>Payroll overview</h1></div></div><div class="header-controls"><div class="month-control"><label for="month">Period</label><select id="month"><option value="">All months</option></select></div><span class="header-divider"></span><button id="theme" class="theme-button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 15A9 9 0 0 1 9 4a9 9 0 1 0 11 11Z"/></svg><span>Dark mode</span></button><button id="account-open" class="header-avatar" aria-label="Open account menu" title="Account and sign out">PS</button></div></header>
+<main id="overview" tabindex="-1">
+<div class="page-heading"><div><h2>A clearer picture of your payroll.</h2><p>Calculate pay, manage records, and keep every number in view.</p></div><button id="refresh" class="secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M6 7a7 7 0 0 1 12-1l2 3M4 15l2 3a7 7 0 0 0 12-1"/></svg><span>Refresh</span></button></div>
+<div id="notice" role="status" aria-live="polite" hidden></div>
+<section class="stats" aria-label="Filtered payroll summary"><article class="card stat"><div class="stat-top"><span>Payroll Records</span><span class="stat-icon records"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3h6v3H9zM9 11h6M9 15h6"/></svg></span></div><strong id="count">—</strong><small>Records in the selected period</small></article><article class="card stat"><div class="stat-top"><span>Total Gross</span><span class="stat-icon gross"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 16 6-6 4 4 6-9M15 5h5v5"/></svg></span></div><strong id="gross">—</strong><small>Salary and bonus combined</small></article><article class="card stat"><div class="stat-top"><span>Total Tax</span><span class="stat-icon tax"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 7h6M9 11h6M9 15h3"/></svg></span></div><strong id="tax">—</strong><small>Total tax deductions</small></article><article class="card stat"><div class="stat-top"><span>Net Pay</span><span class="stat-icon wallet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 8V5a2 2 0 0 0-2-2H5a3 3 0 0 0 0 6h15v11H5a3 3 0 0 1-3-3V6M20 12h-5v4h5"/></svg></span></div><strong id="net-total">—</strong><small>Total take-home pay</small></article></section>
+<div class="layout"><div class="left-column stack">
+<section class="card calculator"><div class="card-heading"><span class="section-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 7h8M8 11h3M8 15h3M15 11v6m-2-2h4"/></svg></span><div><h2>Payroll calculator</h2><p>Calculate and save a payroll record.</p></div></div><form id="create-form" novalidate><div id="create-fields" class="fields"></div><div id="create-preview" class="preview" aria-live="polite"></div><button type="submit" class="primary full">Save payroll record <span aria-hidden="true">↗</span></button></form><p class="form-footnote">Saved to your connected payroll database.</p></section>
+<section class="card pay-breakdown"><div class="section-head"><h2>Pay breakdown</h2><span class="mini-tag">LIVE PREVIEW</span></div><p class="muted">See where each part of gross pay goes.</p><div id="pay-breakdown" aria-live="polite"></div></section>
+</div><div class="stack right-column">
+<section class="card records-card" id="records-section" tabindex="-1"><div class="section-head"><div><h2>Payroll records <span id="records-badge" class="count-badge">0</span></h2><p class="muted">Your payroll history, all in one place.</p></div><button id="export" class="secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 16v5h16v-5"/></svg><span>Export CSV</span></button></div>
+<div class="tools"><div class="search-field"><label for="search">Search employees</label><input id="search" type="search" placeholder="Search by employee name…"></div><div><label for="from">From date</label><input id="from" type="date"></div><div><label for="to">To date</label><input id="to" type="date"></div><div><label for="sort">Sort by</label><select id="sort"><option value="newest">Newest first</option><option value="salary-desc">Salary: high to low</option><option value="salary-asc">Salary: low to high</option><option value="name">Employee: A–Z</option></select></div></div><div class="filter-caption"><span>Dates refer to record creation.</span><button id="clear" class="text-button">Clear filters</button></div><p id="filter-error" class="error" role="alert"></p>
+<div class="table-wrap" role="region" aria-label="Payroll records table" tabindex="0"><table><thead><tr><th>Employee / date</th><th>Salary</th><th>Gross pay</th><th>Tax</th><th>Net pay</th><th>Actions</th></tr></thead><tbody id="records"></tbody></table></div><p id="table-state" class="empty" role="status">Loading payroll records…</p><div class="table-footer"><small id="record-count"></small><span><small id="last-refreshed"></small> <span class="backend-label" id="connection-status">Connecting…</span></span></div></section>
+<section class="card" id="insights" tabindex="-1"><div class="section-head"><div><h2>Payroll analytics</h2><p class="muted">Understand the story behind your numbers.</p></div><select id="chart-mode" aria-label="Chart view"><option value="employees">Gross vs net by record</option><option value="trend">Monthly payroll trend</option></select></div><div class="chart-controls"><label><input id="show-gross" type="checkbox" checked> Gross pay</label><label><input id="show-net" type="checkbox" checked> Net pay</label></div><div id="chart" class="chart-scroll" aria-label="Payroll comparison chart"></div><p class="chart-note">Summary and charts follow your filters. Hover or focus a bar for its value.</p></section>
+</div></div></main>
+<dialog id="edit-dialog" aria-labelledby="edit-title"><h2 id="edit-title">Edit payroll record</h2><form id="edit-form" novalidate><div id="edit-fields" class="fields"></div><div id="edit-preview" class="preview" aria-live="polite"></div><p id="edit-error" class="error" role="alert"></p><div class="actions"><button type="button" data-close="edit-dialog">Cancel</button><button type="submit" class="primary">Save changes</button></div></form></dialog>
+<dialog id="delete-dialog" aria-labelledby="delete-title"><h2 id="delete-title">Delete payroll record?</h2><p id="delete-message"></p><p class="muted">This permanently removes the saved record.</p><p id="delete-error" class="error" role="alert"></p><div class="actions"><button data-close="delete-dialog">Cancel</button><button id="confirm-delete" class="danger">Delete record</button></div></dialog>
+<dialog id="slip-dialog" aria-labelledby="slip-title"><h2 id="slip-title">Salary slip</h2><div id="slip-content"></div><div class="actions"><button data-close="slip-dialog">Close</button><button id="print" class="primary">Print / Save PDF</button></div></dialog>
 
-  <div class="card">
-    <h2>Summary</h2>
-    <div id="summary" class="stats"></div>
-  </div>
-
-  <div class="card">
-    <h2>Recent Records</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Employee</th>
-          <th>Gross</th>
-          <th>Tax</th>
-          <th>Net</th>
-        </tr>
-      </thead>
-      <tbody id="records"></tbody>
-    </table>
-  </div>
-
-  <script>
-    const data = {
-      summary: {
-        total_records: 0,
-        total_gross: 0,
-        total_tax: 0,
-        average_net: 0,
-        largest_employee: "-"
-      },
-      records: []
-    };
-
-    const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    }[character]));
-
-    const render = () => {
-      const summaryRoot = document.getElementById('summary');
-      summaryRoot.innerHTML = `
-        <div class="card"><strong>Total Records</strong><div>${data.summary.total_records}</div></div>
-        <div class="card"><strong>Total Gross</strong><div>${data.summary.total_gross.toFixed(2)}</div></div>
-        <div class="card"><strong>Total Tax</strong><div>${data.summary.total_tax.toFixed(2)}</div></div>
-        <div class="card"><strong>Average Net</strong><div>${data.summary.average_net.toFixed(2)}</div></div>
-        <div class="card"><strong>Largest Employee</strong><div>${escapeHtml(data.summary.largest_employee || '-')}</div></div>
-      `;
-
-      const rows = data.records.map(record => `
-        <tr>
-          <td>${escapeHtml(record.employee_name)}</td>
-          <td>${record.gross_pay.toFixed(2)}</td>
-          <td>${record.tax_amount.toFixed(2)}</td>
-          <td>${record.net_pay.toFixed(2)}</td>
-        </tr>
-      `).join('');
-      document.getElementById('records').innerHTML = rows;
-    };
-
-    fetch('/api/payroll')
-      .then(response => response.json())
-      .then(payload => {
-        data.summary = payload.summary;
-        data.records = payload.records;
-        render();
-      })
-      .catch(() => {
-        render();
-      });
-  </script>
-</body>
-</html>
+<dialog id="settings-dialog" aria-labelledby="settings-title"><div class="section-head"><h2 id="settings-title">Workspace settings</h2><button data-close="settings-dialog" aria-label="Close settings">✕</button></div><label for="appearance">Appearance</label><select id="appearance"><option value="light">Light</option><option value="dark">Dark</option><option value="system">System preference</option></select><div class="settings-detail"><h3>Payroll rules</h3><p>Gross = monthly salary + bonus. Tax = gross × the entered flat tax rate. Net = gross − tax. Tax rates range from 0% to 100%.</p><h3>Amount display</h3><p>No currency code is configured in this project. Amounts retain the existing payroll units, shown to two decimal places.</p><h3>Data connection</h3><p>Records are read and saved using the Java payroll API and SQLite database. No records are stored in your browser.</p></div><div class="actions"><button class="primary" data-close="settings-dialog">Done</button></div></dialog>
+<dialog id="account-dialog" aria-labelledby="account-title"><h2 id="account-title">Your workspace account</h2><p>Signed in as <strong id="account-username"></strong></p><p class="muted">This session expires after 8 hours or when the server restarts.</p><p id="account-error" class="error" role="alert"></p><div class="actions"><button data-close="account-dialog">Close</button><button id="sign-out" class="primary">Sign out</button></div></dialog><div id="print-area"></div><footer class="app-footer"><span>© <span id="footer-year">2026</span> Payroll Studio</span><span>Clarity in every calculation.</span><a href="#overview">Back to top ↑</a></footer>
+</div></div></body></html>
