@@ -1,0 +1,9 @@
+.git
+.vercel
+build
+target
+lib
+*.db
+*.db-*
+.env*
+node_modules

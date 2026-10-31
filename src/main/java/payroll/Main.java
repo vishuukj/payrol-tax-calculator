@@ -27,9 +27,9 @@ public final class Main {
         if (!options.containsKey("--list") && !options.containsKey("--summary") && !options.containsKey("--dashboard")
                 && (!options.containsKey("--employee") || !options.containsKey("--salary")))
             throw new IllegalArgumentException("--employee and --salary are required; use --help for usage");
-        int port = Integer.parseInt(options.getOrDefault("--port", "8000"));
+        int port = Integer.parseInt(options.getOrDefault("--port", System.getenv().getOrDefault("PORT", "8000")));
         if (port < 1 || port > 65535) throw new IllegalArgumentException("Port must be between 1 and 65535");
-        var repository = new PayrollRepository(Path.of(options.getOrDefault("--db", "payroll.db")));
+        var repository = new PayrollRepository(Path.of(options.getOrDefault("--db", System.getenv().getOrDefault("DATABASE_PATH", "payroll.db"))));
         if (options.containsKey("--dashboard")) {
             var server = DashboardServer.start(repository, port);
             Runtime.getRuntime().addShutdownHook(new Thread(() -> server.stop(0)));

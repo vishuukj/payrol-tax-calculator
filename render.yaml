@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: payroll-tax-api
+    runtime: docker
+    branch: java-sqlite
+    plan: starter
+    healthCheckPath: /
+    envVars:
+      - key: PUBLIC_ORIGIN
+        sync: false
+    disk:
+      name: payroll-data
+      mountPath: /var/data
+      sizeGB: 1

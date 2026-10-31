@@ -5,7 +5,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Locale;
 
-/** Shared browser request boundaries; the server is deliberately loopback-only. */
+/** Explicit host and origin boundaries for local and hosted operation. */
 final class RequestSecurity {
     private RequestSecurity() {}
 
@@ -13,6 +13,8 @@ final class RequestSecurity {
         List<String> hosts = exchange.getRequestHeaders().get("Host");
         if (hosts == null || hosts.size() != 1) return false;
         String host = hosts.get(0).toLowerCase(Locale.ROOT);
+        String renderHost = System.getenv("RENDER_EXTERNAL_HOSTNAME");
+        if (renderHost != null && host.equals(renderHost.toLowerCase(Locale.ROOT))) return true;
         int port = exchange.getLocalAddress().getPort();
         return host.equals("127.0.0.1:" + port) || host.equals("localhost:" + port);
     }
@@ -27,11 +29,18 @@ final class RequestSecurity {
         if (origins.size() != 1) return false;
         try {
             URI origin = URI.create(origins.get(0));
+            String publicOrigin = System.getenv("PUBLIC_ORIGIN");
+            if (publicOrigin != null && publicOrigin.startsWith("https://")
+                    && origins.get(0).equals(publicOrigin)) return true;
             return origin.getScheme().equals("http") && origin.getUserInfo() == null
                     && origin.getQuery() == null && origin.getFragment() == null
                     && (origin.getPath() == null || origin.getPath().isEmpty())
                     && origins.get(0).equals("http://" + exchange.getRequestHeaders().getFirst("Host"));
         } catch (IllegalArgumentException | NullPointerException exception) { return false; }
+    }
+
+    static String secureCookie() {
+        return System.getenv("RENDER_EXTERNAL_HOSTNAME") != null ? "; Secure" : "";
     }
 
     static void addHeaders(HttpExchange exchange) {
