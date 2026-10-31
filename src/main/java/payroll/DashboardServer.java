@@ -30,7 +30,7 @@ public final class DashboardServer {
                 assets.put("/" + name, stream.readAllBytes());
             }
         }
-        var server = HttpServer.create(new InetSocketAddress("127.0.0.1", port), 0);
+        var server = HttpServer.create(new InetSocketAddress(System.getenv().getOrDefault("BIND_HOST", "127.0.0.1"), port), 0);
         server.createContext("/", exchange -> {
             try {
                 if (!RequestSecurity.allowedHost(exchange)) {

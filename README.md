@@ -1,4 +1,4 @@
-# Payroll & Tax Calculator + Persistence & Analytics
+﻿# Payroll & Tax Calculator + Persistence & Analytics
 
 Java 17+ payroll application with SQLite storage, analytics, a CLI, and a browser dashboard.
 
@@ -27,6 +27,9 @@ java -cp "build/payroll.jar;lib/*" payroll.Main --dashboard
 ```
 
 Open http://127.0.0.1:8000 for the dashboard. Stop with Ctrl+C.
+For local use with any non-empty username and password, start with
+`java --enable-native-access=ALL-UNNAMED -Dpayroll.localLoginBypass=true -cp "build/payroll.jar;lib/*" payroll.Main --dashboard`.
+This opt-in mode skips credential verification and keeps the existing workspace account intact.
 Use `--port 9000` to change the port and `--db path/to/file.db` to choose a database.
 The database parent directory must exist. On macOS/Linux, use a colon instead
 of a semicolon in the classpath.

@@ -22,6 +22,7 @@ final class AuthService {
     private final PayrollRepository repository;
     private final SecureRandom random = new SecureRandom();
     private final Clock clock;
+    private final boolean localLoginBypass = Boolean.getBoolean("payroll.localLoginBypass");
     private final Map<String, Session> sessions = new ConcurrentHashMap<>();
     private int failures;
     private Instant blockedUntil = Instant.EPOCH;
@@ -74,7 +75,8 @@ final class AuthService {
             String user = session.username();
             Map<String, Object> response = new LinkedHashMap<>();
             response.put("authenticated", user != null);
-            response.put("setupRequired", account() == null);
+            response.put("setupRequired", !localLoginBypass && account() == null);
+            response.put("localLoginBypass", localLoginBypass);
             response.put("username", user);
             response.put("csrfToken", session.csrfToken());
             DashboardServer.json(exchange, 200, response);
@@ -92,7 +94,7 @@ final class AuthService {
         }
         if (path.equals("/api/auth/logout")) {
             sessions.remove(token(exchange));
-            exchange.getResponseHeaders().add("Set-Cookie", COOKIE + "=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0");
+            exchange.getResponseHeaders().add("Set-Cookie", COOKIE + "=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0" + RequestSecurity.secureCookie());
             DashboardServer.json(exchange, 200, Map.of("authenticated", false)); return;
         }
         if (clock.instant().isBefore(blockedUntil)) {
@@ -102,6 +104,14 @@ final class AuthService {
         var fields = readForm(exchange);
         String username = fields.getOrDefault("username", "").strip().toLowerCase(Locale.ROOT);
         String password = fields.getOrDefault("password", "");
+        if (localLoginBypass) {
+            if (username.isBlank() || password.isEmpty())
+                throw new IllegalArgumentException("Enter a username and password.");
+            Session session = issueSession(exchange, username);
+            DashboardServer.json(exchange, 200,
+                    Map.of("authenticated", true, "username", username, "csrfToken", session.csrfToken()));
+            return;
+        }
         Account account = account();
         if (path.equals("/api/auth/setup")) {
             if (account != null) { DashboardServer.json(exchange, 409, Map.of("error", "An account already exists. Please sign in.")); return; }
@@ -139,7 +149,7 @@ final class AuthService {
         Session session = new Session(username, randomToken(), clock.instant().plusSeconds(SESSION_SECONDS));
         sessions.put(token, session);
         exchange.getResponseHeaders().add("Set-Cookie", COOKIE + "=" + token
-                + "; Path=/; HttpOnly; SameSite=Strict; Max-Age=" + SESSION_SECONDS);
+                + "; Path=/; HttpOnly; SameSite=Strict; Max-Age=" + SESSION_SECONDS + RequestSecurity.secureCookie());
         return session;
     }
 

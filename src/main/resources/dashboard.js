@@ -388,7 +388,14 @@ async function initializeSession() {
     try {
         const session = await PayrollApi.session();
         if (session.authenticated) { showWorkspace(session); await load(); }
-        else showSignedOut(session.setupRequired);
+        else {
+            showSignedOut(session.setupRequired);
+            if (session.localLoginBypass) {
+                $('auth-username').minLength = 1;
+                $('auth-username').removeAttribute('pattern');
+                $('auth-description').textContent = 'Local login bypass is enabled. Enter any username and password.';
+            }
+        }
     } catch (error) {
         $('auth-screen').hidden = false;
         $('workspace-content').hidden = true;
